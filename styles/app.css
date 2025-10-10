@@ -1,0 +1,587 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Roboto+Mono:wght@500;700&display=swap");
+:root{
+  --bg:#f3f6fb;          /* fondo claro */
+  --text:#0b1730;
+  --sub:#dfe6f2;         /* texto secundario sobre overlay oscuro */
+  --accent:#25d366;
+  --color-title:#111827;
+  --color-meta:#6b7280;
+  --color-price:#22c55e;
+  --shadow:0 2px 10px rgba(0,0,0,.08);
+  --radius:14px;
+  --gap:6px;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+
+.app{max-width:1100px;margin:16px auto 100px;padding:0 10px}
+h1{font-size:22px;margin:6px 0 10px}
+
+/* ===== Buscador y conteo ===== */
+.toolbar{margin:8px 0}
+.search{
+  width:100%; padding:10px 12px; border-radius:12px;
+  border:1px solid #d7deea; background:#fff; color:var(--text); outline:none;
+}
+.search::placeholder{color:#8996ab}
+.count{margin:6px 2px 10px; opacity:.85; font-size:13px}
+
+/* ===== Categorías ===== */
+.categories{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 12px}
+.cat{
+  padding:6px 10px; border-radius:999px; border:1px solid #d7deea;
+  background:#fff; color:var(--text); cursor:pointer; font-size:13px;
+}
+.cat:hover{background:#f0f4fa}
+.cat.active{background:var(--accent); color:#000; font-weight:700}
+
+/* ===== Masonry (cascada) casi pegado ===== */
+.grid{ column-count:2; column-gap:var(--gap) }
+@media (min-width:600px){ .grid{ column-count:3 } }
+@media (min-width:900px){ .grid{ column-count:4 } }
+
+.pin{
+  position:relative;              /* para overlay absoluto */
+  display:inline-block; width:100%; margin:0 0 var(--gap);
+  border:0; border-radius:var(--radius);
+  overflow:hidden; box-shadow:var(--shadow);
+  cursor:pointer;                 /* toda la tarjeta es clickeable */
+  user-select:none;
+}
+.pin:hover{transform:translateY(-2px); transition:transform .12s ease}
+
+.pin img{
+  width:100%; height:auto; object-fit:cover; display:block; background:#fff;
+}
+
+/* ===== Overlay de texto encima de la imagen ===== */
+.overlay{
+  position:absolute; left:0; right:0; bottom:0;
+  padding:10px 10px 8px;
+  color:#fff;
+  background:linear-gradient( to top,
+    rgba(0,0,0,.55) 0%,
+    rgba(0,0,0,.35) 45%,
+    rgba(0,0,0,0) 100%
+  );
+}
+.overlay .title{margin:0 0 2px; font-weight:800; line-height:1.15; font-size:14px}
+.overlay .sub{margin:0 0 4px; color:var(--sub); font-size:12px}
+.overlay .price{margin:0; font-weight:900; color:var(--accent); font-size:14px}
+
+/* Ocultamos la vieja meta bajo la imagen por si queda en componentes relacionados */
+.meta{display:none}
+
+/* ===== Bottom Bar ===== */
+.bottom-bar{
+  position:fixed; left:0; right:0; bottom:0;
+  backdrop-filter: blur(6px);
+  background:rgba(255,255,255,.7);
+  border-top:1px solid #d7deea;
+  display:flex; justify-content:space-around; align-items:center;
+  padding:8px 6px; z-index:999;
+}
+.bbtn{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  color:#0b1730; text-decoration:none; font-size:12px;
+  background:#fff; border:1px solid #d7deea;
+  padding:8px 10px; border-radius:12px;
+}
+.bbtn:active{transform:scale(.98)}
+
+/* ===== Sección relacionada (debajo) ===== */
+.related{ margin:14px 0 8px; padding:0 2px }
+.related h2{font-size:16px; margin:0 0 8px}
+.related-row{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:var(--gap);
+}
+.related .pin{ margin:0 }
+
+/* ===== Visor de imagen (Modal) ===== */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.72);
+  display:flex; align-items:center; justify-content:center; z-index:9999;
+}
+.modal-body{
+  max-width:95vw; max-height:88vh; position:relative;
+}
+.modal-body img{
+  display:block; max-width:95vw; max-height:88vh; width:auto; height:auto;
+  border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.5);
+  background:#fff;
+}
+.modal-close{
+  position:absolute; top:-12px; right:-12px; background:#fff; border:0;
+  border-radius:999px; width:36px; height:36px; cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,.4); font-weight:800;
+}
+
+/* ====== VISOR ESTILO PINTEREST ====== */
+.viewer-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.7);
+  display:flex; justify-content:center; align-items:flex-start;
+  overflow:auto; z-index:9999; padding:18px 10px;
+}
+.viewer{
+  width:min(920px,96vw); background:#fff; color:#0b1730;
+  border-radius:16px; overflow:hidden; box-shadow:0 16px 50px rgba(0,0,0,.45);
+}
+.viewer-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid #e6ecf5;
+}
+.viewer-title{font-weight:800; margin:0; font-size:16px}
+.viewer-close{
+  background:#fff; border:1px solid #d7deea; border-radius:10px;
+  padding:6px 10px; cursor:pointer; font-weight:800;
+}
+
+.viewer-body{
+  display:grid; grid-template-columns:1fr; gap:0;
+}
+@media(min-width:780px){
+  .viewer-body{ grid-template-columns:58% 42%; }
+}
+
+.viewer-img-wrap{ background:#f7f9fc; display:flex; align-items:center; justify-content:center; }
+.viewer-img{
+  width:100%; height:auto; max-height:72vh; object-fit:contain; display:block;
+}
+
+.viewer-info{ padding:12px 14px; }
+.viewer-meta{ color:#5b6a84; margin:0 0 8px; font-size:13px }
+.viewer-actions{ display:flex; gap:8px; margin:10px 0 6px; }
+.viewer-btn{
+  padding:8px 12px; border-radius:10px; border:1px solid #d7deea;
+  background:#fff; cursor:pointer; font-size:13px;
+}
+.viewer-btn.primary{ background:#25d366; color:#000; font-weight:800; border-color:#25d366; }
+
+.viewer-related{
+  padding:12px 14px; border-top:1px solid #e6ecf5; background:#fafcff;
+}
+.viewer-related h3{ margin:0 0 8px; font-size:15px }
+.viewer-strip{
+  display:grid; grid-auto-flow:column; grid-auto-columns: 140px;
+  gap:8px; overflow-x:auto; padding-bottom:6px;
+}
+.viewer-thumb{
+  width:140px; height:100px; object-fit:cover; border-radius:10px; display:block; background:#fff;
+  border:1px solid #e6ecf5; cursor:pointer;
+}
+
+/* ===== Visor estilo página (imagen arriba + grid en cascada abajo) ===== */
+.viewer2-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.7);
+  display:flex; justify-content:center; align-items:flex-start;
+  overflow:auto; z-index:9999; padding:18px 10px;
+}
+.viewer2{
+  width:min(1100px,96vw); background:#fff; color:#0b1730;
+  border-radius:16px; overflow:hidden; box-shadow:0 16px 50px rgba(0,0,0,.45);
+}
+.viewer2-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid #e6ecf5;
+}
+.viewer2-title{font-weight:800; margin:0; font-size:16px}
+.viewer2-close{
+  background:#fff; border:1px solid #d7deea; border-radius:10px;
+  padding:6px 10px; cursor:pointer; font-weight:800;
+}
+
+.viewer2-hero{
+  background:#f7f9fc; display:flex; align-items:center; justify-content:center;
+  padding:8px;
+}
+.viewer2-hero img{
+  width:100%; height:auto; max-height:70vh; object-fit:contain; display:block;
+  border-radius:12px;
+}
+
+.viewer2-info{ padding:10px 14px; border-bottom:1px solid #e6ecf5; }
+.viewer2-info .meta{display:block; color:#5b6a84; margin:0 0 6px; font-size:13px}
+.viewer2-info .price{margin:0; font-weight:900; color:#25d366; font-size:16px}
+
+.viewer2-related{ padding:12px 12px 16px }
+.viewer2-related h3{ margin:0 0 8px; font-size:15px }
+
+/* Grid en cascada igual al principal */
+.viewer-grid{ column-count:2; column-gap:6px }
+@media (min-width:600px){ .viewer-grid{ column-count:3 } }
+@media (min-width:900px){ .viewer-grid{ column-count:4 } }
+.viewer-grid .pin{ display:inline-block; width:100%; margin:0 0 6px }
+
+/* ==== Ajuste imágenes cuadradas ==== */
+.pin img,
+.viewer2-hero img,
+.viewer-thumb,
+.viewer2 .viewer-grid img {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* === Forzar esquinas cuadradas en TODO === */
+:root{ --radius: 0 !important; }   /* anula radios globales */
+
+.pin,
+.pin img,
+.overlay,
+.viewer2,
+.viewer2-hero img,
+.viewer2 .viewer-grid .pin,
+.viewer2 .viewer-grid .pin img,
+.viewer-thumb {
+  border-radius: 0 !important;
+  box-shadow: none !important;   /* opcional, deja plano */
+}
+
+/* si ves que los chips/botones también quedaron muy redondos y querés cuadrarlos: */
+/*
+.cat, .bbtn, .search { border-radius: 0 !important; }
+*/
+
+/* ==== Ajuste de espacio entre imágenes (cascada) ==== */
+.grid, .viewer-grid {
+  column-gap: 2px !important;   /* antes 6px o más */
+}
+.pin {
+  margin-bottom: 2px !important; /* reduce separación vertical */
+}
+
+/* ===== Menú inferior SOLO ÍCONOS (lux) ===== */
+.iconbar {
+  position: fixed; inset: auto 10px 10px 10px;
+  height: 58px;
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,.75);
+  border: 1px solid #e6ecf5;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  align-items: center; z-index: 1000;
+}
+.iconbtn {
+  display:flex; align-items:center; justify-content:center;
+  height: 100%; border:0; background:transparent; cursor:pointer;
+  transition: transform .12s ease, color .12s ease;
+  color:#334155;
+}
+.iconbtn:hover { transform: translateY(-1px); }
+.iconbtn:active { transform: scale(.96); }
+
+.iconbtn svg { width: 22px; height: 22px; }
+
+.iconbtn.active {
+  color:#111827;
+  position:relative;
+}
+.iconbtn.active::after{
+  content:""; position:absolute; bottom:8px; width:28px; height:28px;
+  border-radius:12px; z-index:-1;
+  background: radial-gradient(120% 120% at 50% 50%, rgba(37,211,102,.25), rgba(37,211,102,.08) 60%, transparent 70%);
+}
+
+/* separá el contenido del footer para que no lo tape */
+.app{ padding-bottom: 80px; }
+
+/* === Iconbar compacto y ocultable === */
+.iconbar{
+  position: fixed !important;
+  inset: auto 12px 12px 12px !important;
+  height: 46px !important;          /* más bajo */
+  border-radius: 12px !important;
+  backdrop-filter: blur(10px) !important;
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid #e6ecf5 !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.12) !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  align-items: center !important;
+  z-index: 1000 !important;
+  transition: transform .25s ease !important;
+}
+.iconbar.hidden{
+  transform: translateY(120%) !important; /* se oculta hacia abajo */
+}
+
+/* Iconos un pelín más chicos para compactar */
+.iconbtn svg { width: 20px !important; height: 20px !important; }
+.iconbar { height: 42px !important; }
+
+/* parche rápido: ocultar header viejo */
+*[data-old-header="Producto"]{display:none}
+
+/* === Forzar colores de las tarjetas === */
+.pin-card .pin-title { color: var(--color-title) !important; font-weight:700; }
+.pin-card .pin-price { color: var(--color-price) !important; font-weight:700; }
+
+/* --- Overrides de tarjeta --- */
+/* disabled duplicate */ .pin-title { color:#25d366 !important; font-weight:700; }
+/* disabled duplicate */ .pin-price { color:#d1d5db !important; font-weight:500; }
+
+/* ===== FINAL OVERRIDES - ÚNICA FUENTE DE VERDAD ===== */
+.pin-card .pin-title { color: var(--color-title) !important; font-weight:700; }
+.pin-card .pin-price { color: var(--color-price) !important; font-weight:700; }
+
+/* ===== FINAL OVERRIDES: pin-body ===== */
+.pin-card .pin-body { padding:10px 12px 12px !important; }
+
+/* === Overrides luz (anti-tema oscuro heredado) === */
+.pin-card{ background:#ffffff !important; color:#0b1730 !important; }
+.pin-img{ background:#ffffff !important; border-bottom:none !important; }
+.pin-card .pin-title { color: var(--color-title) !important; font-weight:700; }
+.pin-card .pin-price { color: var(--color-price) !important; font-weight:700; }
+
+/* === Tipografías por sección (global) === */
+
+/* Título del producto (overlay y tarjeta) */
+.overlay .title,
+.pin-card .pin-title{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* Precio (overlay y tarjeta) → monospace */
+.overlay .price,
+.pin-card .pin-price{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+/* Especificaciones/código (usamos la clase .sub del overlay y .meta por si aparece abajo) */
+.overlay .sub,
+.pin-card .meta{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* ==== FUENTES FORZADAS (¡rompe todo override!) ==== */
+.pin-card .pin-title,
+.overlay .title {
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 800 !important;
+  letter-spacing: .25px;
+  color: #25d366 !important;
+}
+
+.pin-card .pin-price,
+.overlay .price {
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 700 !important;
+  color: #d1d5db !important;
+}
+
+.pin-card .meta,
+.overlay .sub {
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-style: italic !important;
+  color: #e5e7eb !important;
+}
+
+/* ====== Tipografías de la grilla (forzadas) ====== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Roboto+Mono:wght@500;600&display=swap');
+
+/* aseguramos que gane a cualquier cosa anterior */
+.pin-card .pin-title{ 
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  letter-spacing: .2px;
+}
+.pin-card .pin-price{ 
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.pin-card .pin-code{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:#6b7280; font-size:12px;
+}
+
+/* ====== Fuentes de la tarjeta (overlay) ====== */
+.overlay .title{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 800 !important;
+  letter-spacing: .2px;
+}
+.overlay .sub{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 500 !important;
+  opacity: .95;
+}
+.overlay .price{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 800 !important;
+}
+
+/* === Overrides tipografía y color de los textos del pin === */
+.overlay .title,
+.pin-title {
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 700 !important;
+}
+
+.overlay .price,
+.pin-price {
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 700 !important;
+}
+
+/* si tenés descripción/subtítulo */
+.overlay .sub {
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 600 !important;
+}
+
+/* ===== Tipografías específicas de producto ===== */
+.pin-title {
+  font-family: 'Poppins', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  color: #25d366 !important;
+}
+
+.pin-price {
+  font-family: 'Roboto Mono', monospace !important;
+  font-weight: 500 !important;
+  color: #d1d5db !important;
+}
+
+.pin-code, .pin-desc {
+  font-family: 'Roboto Mono', monospace !important;
+  font-weight: 400;
+  color: #9ca3af !important;
+  font-size: 13px;
+}
+
+/* === TYPO OVERRIDES (ganan por ir al final y por especificidad) === */
+/* En tarjetas tipo Pinterest: overlay/title/sub/price (los que se ven encima de la foto) */
+.overlay .title{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight:800 !important;
+}
+.overlay .price{
+  font-family:'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight:700 !important;
+}
+.overlay .sub{
+  font-family:'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight:500 !important;
+}
+
+/* En tarjetas con cuerpo tradicional (por si alguna usa pin-title/pin-price) */
+.pin-card .pin-title{
+  font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight:800 !important;
+}
+.pin-card .pin-price{
+  font-family:'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight:700 !important;
+}
+
+/* === Tipografías forzadas SOLO para las tarjetas === */
+.pin-card .pin-title{
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight: 800 !important;
+}
+.pin-card .pin-price{
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight: 700 !important;
+}
+.pin-card .sub,
+.pin-card .meta{
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+}
+
+/* Tipografías forzadas solo dentro de la tarjeta */
+.pin-card .pin-title{
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight: 800 !important;
+}
+.pin-card .pin-price{
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight: 700 !important;
+}
+.pin-card .pin-meta{
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight: 600;
+}
+
+/* ===== Estilo de texto unificado ===== */
+.pin-desc {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+.pin-code {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.pin-price {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  color: #22c55e;
+  font-size: 15px;
+}
+
+/* ===== Ajuste visual del bloque de texto ===== */
+.pin-desc {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 15px;         /* antes 14px */
+  color: #111827;          /* negro elegante */
+  margin-bottom: 3px;
+}
+
+.pin-code {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+  color: #3b82f6;          /* azul claro profesional */
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  word-break: break-word;
+}
+
+.pin-price {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  font-size: 16px;
+  color: #22c55e;          /* verde del precio */
+  margin-top: 4px;
+}
+
+/* === Forzado de tipografías y colores dentro de la tarjeta === */
+.pin-card .pin-title{
+  color: var(--color-title) !important;
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight: 800 !important;
+}
+.pin-card .pin-price{
+  color: var(--color-price) !important;
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-weight: 700 !important;
+}
+.pin-card .pin-meta{
+  color: var(--color-meta) !important;
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+  font-weight: 600 !important;
+}
+
+/* ====== Colores controlados por variables ====== */
+:root{
+  --color-title:#111111;   /* Título / descripción (oscuro) */
+  --color-meta:#475569;    /* Código/meta (gris azulado) */
+  --color-price:#16a34a;   /* Precio (verde) */
+}
+
+/* Fuerza dentro de la tarjeta (alta especificidad) */
+.pin-card .pin-title{ color: var(--color-title) !important; }
+.pin-card .pin-meta{  color: var(--color-meta)  !important; }
+.pin-card .pin-price{ color: var(--color-price) !important; }

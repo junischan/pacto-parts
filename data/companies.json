@@ -1,0 +1,14 @@
+[
+  {
+    "id": "demo-001",
+    "nombre": "Repuestos Don Luis",
+    "whatsapp": "+595991234567",
+    "verified": true
+  },
+  {
+    "id": "pend-002",
+    "nombre": "Casa X",
+    "whatsapp": "+59598111111",
+    "verified": false
+  }
+]

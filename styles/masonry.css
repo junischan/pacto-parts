@@ -1,0 +1,12 @@
+/* Siempre 2 columnas */
+.masonry{ column-count:2; column-gap:12px; padding:4px; }
+
+/* Cada item evita cortes y ocupa el ancho de su columna */
+.masonry-item{ break-inside:avoid; -webkit-column-break-inside:avoid; display:inline-block; width:100%; margin:0 0 12px; }
+
+/* Tarjeta e imagen con altura natural (no cuadramos) */
+.pin-card{ background:#0b1220; color:#fff; border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.25); overflow:hidden; }
+.pin-img{ display:block; width:100%; height:auto; background:#111827; border-bottom:4px solid #0d1729; }
+/* disabled duplicate */ .pin-body { padding:10px 12px 12px; }
+/* disabled duplicate */ .pin-title { font-weight:700; font-size:14px; line-height:1.25; }
+.pin-price{ margin-top:4px; font-size:13px; opacity:.9; }
