@@ -585,3 +585,57 @@ h1{font-size:22px;margin:6px 0 10px}
 .pin-card .pin-title{ color: var(--color-title) !important; }
 .pin-card .pin-meta{  color: var(--color-meta)  !important; }
 .pin-card .pin-price{ color: var(--color-price) !important; }
+.pin-code { font-family: "Roboto Mono", monospace; font-weight: 600; color: #1e40af !important; font-size: 14px; letter-spacing: 0.3px; }
+
+/* === Ajuste visual del precio === */
+.pin-price {
+  font-family: 'Roboto Mono', monospace !important;
+  font-weight: 500 !important;       /* más fino que 700 */
+  font-size: 16px;
+  color: #1a1a1a !important;         /* casi negro, muy visible */
+}
+
+/* Si querés probar otro color, podés cambiar #1a1a1a por alguno de estos:
+   - #222222 (negro suave)
+   - #0f766e (verde oscuro elegante)
+   - #1d4ed8 (azul medio)
+   - #eab308 (dorado)
+*/
+
+/* === Verde profesional más legible === */
+.pin-price {
+  font-family: 'Roboto Mono', monospace !important;
+  font-weight: 500 !important;
+  font-size: 16px;
+  color: #0f766e !important;   /* verde oscuro tipo empresa */
+}
+
+/* === Azul sobrio para el precio === */
+.pin-price {
+  font-family: 'Roboto Mono', monospace !important;
+  font-weight: 500 !important;
+  font-size: 16px;
+  color: #1e3a8a !important;   /* azul marino elegante */
+}
+
+/* === Negro limpio y claro === */
+.pin-price {
+  font-family: 'Roboto Mono', monospace !important;
+  font-weight: 500 !important;
+  font-size: 16px;
+  color: #111827 !important;   /* negro-gris moderno */
+}
+
+/* === Descripción del producto (pin-title) === */
+.pin-title {
+  color: #1e3a8a !important;     /* azul oscuro elegante */
+  font-weight: 600 !important;   /* más fino que el 800 */
+  font-size: 15px !important;
+}
+
+/* === Descripción (pin-title) naranja cálido === */
+.pin-title {
+  color: #ea580c !important;     /* naranja visible */
+  font-weight: 600 !important;
+  font-size: 15px !important;
+}

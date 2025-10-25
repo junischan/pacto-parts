@@ -6,6 +6,12 @@ export default function ProductCard({ item }) {
   const precioFmt = precio > 0 ? new Intl.NumberFormat("es-PY").format(precio) : "Consultar";
 
   const codigo = item?.codigo ?? item?.codigo_fabricante ?? (item?.titulo?.match(/^([0-9]+)/)?.[1]) ?? (item?.imagen?.match(/[0-9]{5,}/)?.[0]) ?? item?.id ?? item?.code ?? "Sin código";
+    ? String(item.codigo)
+    : (() => {
+        const m = (item?.titulo || "").match(/^(\d+)-/);
+        return m ? m[1] : "Sin código";
+      })();
+
   const tituloLimpio = (item?.titulo || "").replace(/^\d+-/, "");
   const nombreBonito = tituloLimpio.replace(/-/g, " ").replace(/\s+/g, " ").trim();
 

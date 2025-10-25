@@ -1,0 +1,70 @@
+import React from "react";
+import { ShoppingCart } from "lucide-react";
+
+export default function ProductCard({ item }) {
+  const precio = Number(item?.precio || 0);
+  const precioFmt = precio > 0 ? new Intl.NumberFormat("es-PY").format(precio) : "Consultar";
+
+  // Código: usa item.codigo si existe; si no, saca el número del título original
+  const codigo = item?.codigo
+    ? String(item.codigo)
+    : (() => {
+        const m = (item?.tituloOriginal || item?.titulo || "").match(/^(\d+)-/);
+        return m ? m[1] : "Sin código";
+      })();
+
+  // Título limpio (sin número) y embellecido para mostrar como descripción
+  const tituloLimpio = (item?.titulo || "").replace(/^\d+-/, "");
+  const nombreBonito = tituloLimpio
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\p{L}/gu, (c) => c.toUpperCase()); // capitaliza cada palabra
+
+  const img = item?.imagen ?? item?.image ?? item?.photo ?? "";
+  const categoria = item?.categoria ?? "Otros";
+
+  const whatsapp = `https://wa.me/595971111111?text=Hola!%20Estoy%20interesado%20en%20${encodeURIComponent(nombreBonito)}%20(${codigo})`;
+
+  return (
+    <div style={{ background:"#141a2a", color:"#e6e8ee", border:"1px solid #243043", borderRadius:12, padding:12 }}>
+        {img ? (
+          <img src={img} alt={nombreBonito || "Producto"} style={{ width:"100%", height:"auto", objectFit:"contain", display:"block", borderRadius:10 }} />
+        ) : (
+          <div style={{display:"grid", placeItems:"center", height:"auto", color:"#8aa0b6"}}>Sin imagen</div>
+        )}
+      </div>
+
+      <div style={{ marginTop:10, fontSize:18, fontWeight:800, color:"#64c8ff" }}>{codigo}</div>
+
+      <div style={{ marginTop:6, fontSize:15, fontWeight:700, color:"#ff9966" }}>
+        {nombreBonito || "Sin título"}
+      </div>
+
+      <div style={{ fontSize:12, opacity:0.85, marginTop:4 }}>Categoría: {categoria}</div>
+
+      <div style={{ fontSize:18, fontWeight:900, margin:"8px 0 10px", color: precioFmt === "Consultar" ? "#cbd5e1" : "#ffd700" }}>
+        {precioFmt === "Consultar" ? "Consultar" : `₲ ${precioFmt}`}
+      </div>
+
+      <div style={{ display:"flex", gap:8 }}>
+        <a
+          href={whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ background:"#25d366", color:"#0b1220", padding:"8px 10px", borderRadius:8, fontWeight:800, fontSize:13, textDecoration:"none", display:"inline-flex", alignItems:"center", gap:6 }}
+        >
+          WhatsApp
+        </a>
+        <button
+          type="button"
+          style={{ background:"#243043", color:"#fff", padding:"8px 10px", border:"1px solid #64c8ff", borderRadius:8, fontWeight:700, fontSize:13, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:6 }}
+          onClick={() => console.log("Add to cart:", codigo)}
+        >
+          <ShoppingCart size={16} />
+          Carrito
+        </button>
+      </div>
+    </div>
+  );
+}
