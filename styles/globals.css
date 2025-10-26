@@ -1,66 +1,24 @@
-:root{
-  --bg:#f3f7fb;
-  --card:#fff;
-  --ink:#0f172a;
-  --muted:#64748b;
-  --ok:#16a34a;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-*{ box-sizing:border-box }
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
-.page{ max-width:960px; margin:0 auto; padding:18px }
-h1{ margin:12px 0 10px }
 
-/* UI básica */
-.search{
-  width:100%; padding:14px 16px; border:1px solid #d7deea; border-radius:12px;
-  background:#fff; outline:none; font-size:16px;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
-.chips{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 8px }
-.chip{ padding:8px 14px; border-radius:18px; border:1px solid #d7deea; background:#fff; color:#111 }
-.chip.active{ background:var(--ok); color:#fff; border-color:var(--ok) }
-.results{ color:var(--muted); margin:6px 2px 12px }
 
-/* Grilla base (no masonry) */
-.grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px }
-@media (max-width:520px){ .grid{ grid-template-columns:1fr } }
-
-/* Card genérica */
-.card{
-  background:var(--card); border-radius:14px; overflow:hidden;
-  box-shadow:0 6px 20px rgba(15,23,42,.06);
-  border:1px solid #e8eef7; cursor:pointer;
+#__next {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
-.card-img{ width:100%; height:200px; object-fit:cover; display:block }
-.placeholder{
-  display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(180deg,#cbd5e1,#94a3b8); color:#fff; font-weight:700;
-}
-.card-info{ padding:12px }
-.card-title{ font-weight:800; font-size:18px }
-.card-sub{ color:var(--muted); font-size:14px; margin-top:2px }
-.card-price{ color:#059669; font-weight:900; margin-top:10px }
-
-/* Modal genérico */
-.modal{ position:fixed; inset:0; background:rgba(0,0,0,.6);
-  display:flex; align-items:center; justify-content:center; padding:16px; z-index:1000 }
-.modal-body{ background:#fff; border-radius:14px; max-width:960px; width:100%; overflow:hidden }
-.modal-img{ width:100%; max-height:60vh; object-fit:contain; background:#000 }
-.modal-empty{ height:240px; display:flex; align-items:center; justify-content:center; color:#999 }
-.modal-info{ padding:16px }
-.btn{ margin-top:10px; display:inline-block; padding:10px 14px; border-radius:10px; background:var(--ok); color:#fff; text-decoration:none }
-
-/* Bottombar genérica */
-.bottombar{
-  position:fixed; left:12px; right:12px; bottom:12px; height:58px; border-radius:18px;
-  background:rgba(255,255,255,.9); backdrop-filter: blur(8px);
-  display:grid; grid-template-columns:repeat(5,1fr); align-items:center; justify-items:center;
-  border:1px solid #e6ecf5; box-shadow:0 8px 22px rgba(15,23,42,.12)
-}
-.bottombar span{ font-size:22px; opacity:.9 }
-
-/* Importante: aquí NO hay .pin-title / .pin-price / .pin-code / .meta */

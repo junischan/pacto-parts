@@ -16,41 +16,28 @@ export default function RelatedStrip({ base, items = [] }) {
 
   if (!sameCat.length) {
     return (
-      <div style={{ opacity: 0.7, padding: 12, color: "#94a3b8" }}>
+      <div style={{ opacity: 0.7, padding: 12 }}>
         No hay más productos en <strong>{base.categoria || "esta categoría"}</strong>.
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: 20 }}>
-      <div style={{ 
-        fontWeight: 700, 
-        marginBottom: 12,
-        color: "#64c8ff",
-        fontSize: 16
-      }}>
+    <div>
+      <div style={{ fontWeight: 700, margin: "12px 0" }}>
         Más en <strong>{base.categoria}</strong>:
       </div>
 
-      {/* Masonry grid para relacionados */}
-      <div style={{ 
-        columnCount: 2,
-        columnGap: 8,
-        columnFill: 'balance'
+      {/* Grid 2 columnas igual que arriba */}
+      <div className="related-row" style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gap: 12,
+        alignItems: "start",
+        marginTop: 8
       }}>
         {sameCat.map((p) => (
-          <div 
-            key={p.codigo || p.id} 
-            style={{ 
-              breakInside: "avoid",
-              WebkitColumnBreakInside: "avoid",
-              marginBottom: 8,
-              pageBreakInside: 'avoid'
-            }}
-          >
-            <ProductCard item={p} allProducts={items} />
-          </div>
+          <ProductCard key={p.codigo} item={p} />
         ))}
       </div>
     </div>

@@ -1,0 +1,35 @@
+
+/* Mantener proporción en imágenes de relacionados */
+.related-row img{width:100
+/* Relacionados: altura natural, sin estirar */
+.related-row{align-items:start}
+.related-row img{width:100%;height:auto;display:block}
+
+/* Ajuste: elimina el exceso de espacio vertical en relacionados */
+.related-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px; /* antes solía ser 16 o más */
+  align-items: start;
+  margin-top: 8px !important;
+}
+
+/* Masonry para relacionados (sin huecos) */
+
+/* Relacionados: grid 2 cols, imágenes proporcionales */
+.related-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-top:8px}
+.related-row img{width:100%;height:auto;display:block}
+
+/* Relacionados: 2 cols compactas, imágenes con alto uniforme */
+.related-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start;margin-top:8px}
+
+/* Relacionados: 2 cols compactas, imágenes naturales */
+.related-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-top:8px}
+
+/* --- Relacionados (grid 2 columnas, imágenes naturales) --- */
+.related-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-top:8px}
+.related-row img{width:100%;height:auto;display:block}
+/* -------------------------------------------------------------- */
+
+/* Relacionados: 2 cols compactas, imágenes naturales */
+.related-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-top:8px}

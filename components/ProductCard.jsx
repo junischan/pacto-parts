@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 import { ShoppingCart } from "lucide-react";
 
@@ -20,55 +21,92 @@ export default function ProductCard({ item }) {
       color:"#e6e8ee",
       border:"1px solid #243043",
       borderRadius:12,
-      padding:12
+      overflow: "hidden",
+      marginBottom: 6,
+      display: "inline-block",
+      width: "100%",
+      verticalAlign: "top"
     }}>
-      {/* IMAGEN FULL-BLEED SIN RECORTE (ocupa el ancho, altura automática) */}
-      <div style={{
-        width:"calc(100% + 24px)",        // sangra hasta el borde externo (12px por lado)
-        margin:"-12px -12px 10px -12px",  // pega arriba y laterales, deja 10px abajo
-        overflow:"hidden",
-        borderTopLeftRadius:12,
-        borderTopRightRadius:12,
-        background:"#0b1220"
-      }}>
-        {img ? (
+      {/* IMAGEN */}
+      {img ? (
+        <Link href={`/productos/${codigo}`}>
           <img
             src={img}
             alt={nombreBonito || "Producto"}
             style={{
-              width:"100%",      // llena el ancho
-              height:"auto",     // altura natural -> NO deforma
-              display:"block",   // elimina espacios fantasma
+              width:"100%",
+              height:"auto",
+              display:"block",
+              background:"#0b1220"
             }}
           />
-        ) : (
-          <div style={{display:"grid", placeItems:"center", padding:"40px 0", color:"#8aa0b6"}}>Sin imagen</div>
-        )}
-      </div>
+        </Link>
+      ) : (
+        <div style={{
+          display:"grid", 
+          placeItems:"center", 
+          padding:"60px 20px", 
+          color:"#8aa0b6",
+          background:"#0b1220"
+        }}>
+          Sin imagen
+        </div>
+      )}
 
-      <div style={{ fontSize:18, fontWeight:800, color:"#64c8ff" }}>{codigo}</div>
-      <div style={{ marginTop:4, fontSize:13, fontWeight:600, color:"#ff9966" }}>{nombreBonito || "Sin título"}</div>
+      {/* Contenido */}
+      <div style={{ padding: "10px" }}>
+        <div style={{ fontSize:16, fontWeight:800, color:"#64c8ff" }}>{codigo}</div>
+        <div style={{ marginTop:3, fontSize:12, fontWeight:600, color:"#ff9966" }}>{nombreBonito || "Sin título"}</div>
 
-      <div style={{
-        fontSize:18, fontWeight:900, margin:"8px 0 10px",
-        color: precioFmt === "Consultar" ? "#cbd5e1" : "#ffd700"
-      }}>
-        {precioFmt === "Consultar" ? "Consultar" : `₲ ${precioFmt}`}
-      </div>
+        <div style={{
+          fontSize:16, fontWeight:900, margin:"6px 0 8px",
+          color: precioFmt === "Consultar" ? "#cbd5e1" : "#ffd700"
+        }}>
+          {precioFmt === "Consultar" ? "Consultar" : `₲ ${precioFmt}`}
+        </div>
 
-      <div style={{ display:"flex", gap:8 }}>
-        <a
-          href={whatsapp} target="_blank" rel="noopener noreferrer"
-          style={{ background:"#25d366", color:"#0b1220", padding:"8px 10px", borderRadius:8, fontWeight:800, fontSize:13, textDecoration:"none", display:"inline-flex", alignItems:"center", gap:6 }}
-        >WhatsApp</a>
-        <button
-          type="button"
-          style={{ background:"#243043", color:"#fff", padding:"8px 10px", border:"1px solid #64c8ff", borderRadius:8, fontWeight:600, fontSize:13, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:6 }}
-          onClick={() => console.log("Add to cart:", codigo)}
-        >
-          <ShoppingCart size={16} />
-          Carrito
-        </button>
+        {/* Botones */}
+        <div style={{ display:"flex", gap:6 }}>
+          <a
+            href={whatsapp} target="_blank" rel="noopener noreferrer"
+            style={{ 
+              flex: 1,
+              background:"#25d366", 
+              color:"#0b1220", 
+              padding:"8px", 
+              borderRadius:8, 
+              fontWeight:800, 
+              fontSize:12, 
+              textDecoration:"none", 
+              display:"flex", 
+              alignItems:"center",
+              justifyContent: "center",
+              gap:4 
+            }}
+          >WhatsApp</a>
+          <button
+            type="button"
+            style={{ 
+              flex: 1,
+              background:"#243043", 
+              color:"#fff", 
+              padding:"8px", 
+              border:"1px solid #64c8ff", 
+              borderRadius:8, 
+              fontWeight:600, 
+              fontSize:12, 
+              cursor:"pointer", 
+              display:"flex", 
+              alignItems:"center",
+              justifyContent: "center",
+              gap:4 
+            }}
+            onClick={() => console.log("Add to cart:", codigo)}
+          >
+            <ShoppingCart size={14} />
+            Carrito
+          </button>
+        </div>
       </div>
     </div>
   );
