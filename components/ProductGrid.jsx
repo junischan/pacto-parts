@@ -25,13 +25,24 @@ export default function ProductGrid({ items = [], q = "", cat = "Todos" }) {
         {list.length} resultados
       </div>
 
-      {/* Masonry grid SIN padding */}
-      <div style={{ 
-        columnCount: 2,
+      {/* Masonry con columnas adaptables */}
+      <style jsx>{`
+        @media (max-width: 640px) and (orientation: portrait) {
+          .masonry-grid { column-count: 2; }
+        }
+        @media (min-width: 640px) and (orientation: landscape),
+               (min-width: 768px) {
+          .masonry-grid { column-count: 4; }
+        }
+        @media (min-width: 1024px) {
+          .masonry-grid { column-count: 5; }
+        }
+      `}</style>
+
+      <div className="masonry-grid" style={{ 
         columnGap: 4,
         columnFill: 'balance',
-        padding: 0,
-        margin: 0
+        padding: 0
       }}>
         {list.map((p, i) => (
           <div 
@@ -40,8 +51,7 @@ export default function ProductGrid({ items = [], q = "", cat = "Todos" }) {
               breakInside: "avoid",
               WebkitColumnBreakInside: "avoid",
               marginBottom: 4,
-              pageBreakInside: 'avoid',
-              padding: 0
+              pageBreakInside: 'avoid'
             }}
           >
             <ProductCard item={p} allProducts={items} />

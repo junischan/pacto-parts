@@ -1,12 +1,11 @@
 import Banner from "../components/Banner";
-import fs from "fs";
-import path from "path";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import SearchBar from "../components/SearchBar";
 import MagicParticles from "../components/MagicParticles";
 import BottomMenuIcons from "../components/BottomMenuIcons";
+import { supabase } from "../lib/supabase";
 
 const AppReact = dynamic(() => import("../components/AppReact"), { ssr: true });
 
@@ -15,15 +14,23 @@ function normalize(p){
     id: p.id ?? null,
     titulo: p.titulo ?? p.title ?? p.name ?? "Sin título",
     precio: p.precio ?? p.price ?? p.priceGs ?? 0,
-    imagen: p.imagen ?? p.image ?? p.photo ?? "",
+    imagen: p.imagen ?? p.image ?? p.photo ?? p.imagen_url ?? "",
     categoria: p.categoria ?? p.category ?? "Otros",
   };
 }
 
 export async function getServerSideProps() {
-  const file = path.join(process.cwd(), "data", "products.json");
-  const raw = fs.readFileSync(file, "utf8");
-  const data = JSON.parse(raw);
+  // Leer desde Supabase
+  const { data, error } = await supabase
+    .from('productos')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error Supabase:', error);
+    return { props: { productos: [] } };
+  }
+
   const productos = Array.isArray(data) ? data.map(normalize) : [];
   return { props: { productos } };
 }
