@@ -1,4 +1,3 @@
-import Banner from "../components/Banner";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -9,18 +8,7 @@ import { supabase } from "../lib/supabase";
 
 const AppReact = dynamic(() => import("../components/AppReact"), { ssr: true });
 
-function normalize(p){
-  return {
-    id: p.id ?? null,
-    titulo: p.titulo ?? p.title ?? p.name ?? "Sin título",
-    precio: p.precio ?? p.price ?? p.priceGs ?? 0,
-    imagen: p.imagen ?? p.image ?? p.photo ?? p.imagen_url ?? "",
-    categoria: p.categoria ?? p.category ?? "Otros",
-  };
-}
-
 export async function getServerSideProps() {
-  // Leer desde Supabase
   const { data, error } = await supabase
     .from('productos')
     .select('*')
@@ -31,7 +19,9 @@ export async function getServerSideProps() {
     return { props: { productos: [] } };
   }
 
-  const productos = Array.isArray(data) ? data.map(normalize) : [];
+  // SERIALIZACIÓN FORZADA - convertir a JSON y parsear de nuevo
+  const productos = JSON.parse(JSON.stringify(data || []));
+  
   return { props: { productos } };
 }
 
@@ -58,6 +48,7 @@ export default function Home({ productos }) {
       background: 'linear-gradient(to bottom, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
       paddingBottom: 100
     }}>
+
       <div style={{
         position: 'relative',
         width: '100%',
@@ -97,7 +88,7 @@ export default function Home({ productos }) {
         </div>
       </div>
       <AppReact base={productos} q={q} cat={cat} />
-      
+
       <BottomMenuIcons onChange={handleTabChange} autoHide={true} />
 
       <style jsx>{`
