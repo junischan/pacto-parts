@@ -1,0 +1,117 @@
+import { useState, useEffect, useRef } from 'react';
+
+const CurrencyTicker = () => {
+  const [rates, setRates] = useState({
+    Dólar: 10000, // Ejemplo: 1 USD = 10000 PYG (reemplaza con la tasa real)
+    Euro: 11000, // Ejemplo: 1 EUR = 11000 PYG (reemplaza con la tasa real)
+    Libra: 12000, // Ejemplo: 1 GBP = 12000 PYG (reemplaza con la tasa real)
+    Yen: 70,    // Ejemplo: 1 JPY = 70 PYG (reemplaza con la tasa real)
+    Real: 2000,   // Ejemplo: 1 BRL = 2000 PYG (reemplaza con la tasa real)
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const tickerRef = useRef(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  useEffect(() => {
+    // Simulación de obtención de datos de la API (reemplaza con tu lógica real)
+    const fetchRates = async () => {
+      setLoading(true);
+      try {
+        // Simula una llamada a la API con un retraso
+        setTimeout(() => {
+          // Reemplaza estos valores con las tasas de cambio reales
+          setRates({
+            Dólar: 10000,
+            Euro: 11000,
+            Libra: 12000,
+            Yen: 70,
+            Real: 2000,
+          });
+          setLoading(false);
+        }, 1000);
+      } catch (err) {
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    fetchRates();
+
+    // Actualiza las tasas cada 60 segundos (ajusta según sea necesario)
+    const intervalId = setInterval(fetchRates, 60000);
+
+    return () => clearInterval(intervalId); // Limpia el intervalo al desmontar
+  }, []);
+
+  useEffect(() => {
+    // Animación continua del carrusel
+    const animateTicker = () => {
+      if (tickerRef.current) {
+        const containerWidth = tickerRef.current.offsetWidth;
+        const contentWidth = tickerRef.current.scrollWidth;
+
+        // Calcula la nueva posición del scroll
+        setScrollPosition((prevPosition) => {
+          const newPosition = prevPosition + 1;
+          if (newPosition > contentWidth - containerWidth) {
+            return 0;
+          }
+          return newPosition;
+        });
+      }
+    };
+
+    // Inicia la animación cada 20ms (ajusta para la velocidad deseada)
+    const animationInterval = setInterval(animateTicker, 20);
+
+    return () => clearInterval(animationInterval); // Limpia el intervalo al desmontar
+  }, []);
+
+  if (loading) {
+    return <div>Cargando tasas de cambio a PYG...</div>;
+  }
+
+  if (error) {
+    return <div>Error al cargar las tasas de cambio: {error.message}</div>;
+  }
+
+  return (
+    <div style={{
+      background: '#f0f0f0', // Fondo gris claro
+      color: '#333',         // Texto oscuro
+      padding: '8px',         // Reduce el padding
+      fontSize: '14px',        // Reduce el tamaño de la fuente
+      overflow: 'hidden',
+      whiteSpace: 'nowrap',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.2)', // Sombra más sutil
+      position: 'relative',
+      borderRadius: '5px',     // Bordes más suaves
+    }}>
+      <div
+        ref={tickerRef}
+        style={{
+          display: 'flex',
+          transform: `translateX(-${scrollPosition}px)`,
+          transition: 'none',
+        }}
+      >
+        {Object.entries(rates).map(([nombreMoneda, rate]) => (
+          <span key={nombreMoneda} style={{
+            marginRight: '20px',   // Reduce el margen
+            display: 'inline-block',
+            padding: '6px 10px',   // Reduce el padding
+            borderRadius: '15px',  // Bordes más redondeados
+            backgroundColor: '#e0e0e0', // Gris más claro
+            fontWeight: 'normal',    // Texto normal
+            textShadow: 'none',      // Quita la sombra
+          }}>
+            1 {nombreMoneda} = {rate.toLocaleString('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0, maximumFractionDigits: 0 })} PYG
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default CurrencyTicker;

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import SearchBar from "../components/SearchBar";
 import MagicParticles from "../components/MagicParticles";
 import BottomMenuIcons from "../components/BottomMenuIcons";
+import CurrencyTicker from "../components/CurrencyTicker";
 import { supabase } from "../lib/supabase";
 
 const AppReact = dynamic(() => import("../components/AppReact"), { ssr: true });
@@ -48,6 +49,7 @@ export default function Home({ productos }) {
       background: 'linear-gradient(to bottom, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
       paddingBottom: 100
     }}>
+      <CurrencyTicker />
 
       <div style={{
         position: 'relative',

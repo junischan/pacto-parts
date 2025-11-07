@@ -1,0 +1,63 @@
+import fs from "fs";
+import path from "path";
+import { createClient } from "@supabase/supabase-js";
+import csv from "csv-parser";
+
+// Configuración Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Parámetros CLI
+const [ , , folder, csvFile ] = process.argv;
+if (!folder || !csvFile) {
+  console.error("Uso: node tools/subir-lote.js <carpeta_fotos> <archivo_csv>");
+  process.exit(1);
+}
+
+// Leer CSV
+const rows = [];
+fs.createReadStream(csvFile)
+  .pipe(csv())
+  .on("data", (row) => rows.push(row))
+  .on("end", async () => {
+    console.log(`➡️ Procesando ${rows.length} filas…`);
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const filePath = path.join(folder, r.imagen_filename);
+      const fileData = fs.readFileSync(filePath);
+
+      const bucketPath = `productos/fotos/${r.imagen_filename}`;
+      const { error: uploadError } = await supabase.storage
+        .from("productos")
+        .upload(bucketPath, fileData, { upsert: true });
+
+      if (uploadError) {
+        console.error(`❌ Error al subir ${r.codigo}:`, uploadError.message);
+        continue;
+      }
+
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketPath}`;
+
+      const { error: dbError } = await supabase
+        .from("productos")
+        .upsert({
+          codigo: r.codigo,
+          titulo: r.titulo,
+          categoria: r.categoria,
+          marca: r.marca,
+          precio: Number(r.precio || 0),
+          descripcion: r.descripcion,
+          imagen_url: publicUrl,
+        });
+
+      if (dbError) {
+        console.error(`⚠️ Error DB ${r.codigo}:`, dbError.message);
+      } else {
+        console.log(`✅ ${i + 1}/${rows.length} ${r.codigo} subido correctamente`);
+      }
+    }
+
+    console.log("🎉 Terminado");
+  });

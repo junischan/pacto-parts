@@ -3,21 +3,27 @@ import React from "react";
 import { ShoppingCart } from "lucide-react";
 
 export default function ProductCard({ item }) {
-  // DEBUG - ver TODO el objeto
-  if (item.id <= 3) {
-    console.log(`[Card ID ${item.id}] COMPLETO:`, item);
-  }
-  
   const precio = Number(item?.precio || 0);
   const precioFmt = precio > 0 ? new Intl.NumberFormat("es-PY").format(precio) : "Consultar";
 
-  const codigo = item?.codigo || "SIN-CODIGO";
+  // Título limpio para mostrar
   const tituloLimpio = (item?.titulo || "").replace(/^\d+-/, "");
   const nombreBonito = tituloLimpio.replace(/-/g, " ").replace(/\s+/g, " ").trim();
 
-  const img = item?.imagen_url || item?.imagen || "";
-  const categoria = item?.categoria || "Otros";
+  // Código: NUNCA caer a id; prioriza campos reales o nombre de archivo
+  const codigo =
+    item?.codigo ??
+    item?.codigo_fabricante ??
+    (item?.titulo?.match(/^([0-9A-Za-z-]+)/)?.[1]) ??
+    ((item?.imagen_url || item?.imagen || "").match(/([A-Za-z0-9_-]+)(?=\.(jpg|jpeg|png|webp)$)/)?.[1]) ??
+    item?.code ??
+    "Sin código";
 
+  // Imagen: prioriza URL de Supabase si existe
+  const img = item?.imagen_url ?? item?.imagen ?? item?.image ?? item?.photo ?? "";
+  const categoria = item?.categoria ?? "Otros";
+
+  // WhatsApp: definido DESPUÉS de 'codigo'
   const whatsapp = `https://wa.me/595971111111?text=Hola!%20Estoy%20interesado%20en%20${encodeURIComponent(nombreBonito)}%20(${codigo})`;
 
   return (
@@ -32,17 +38,13 @@ export default function ProductCard({ item }) {
       width: "100%",
       verticalAlign: "top"
     }}>
+      {/* IMAGEN */}
       {img ? (
         <Link href={`/productos/${codigo}`}>
           <img
             src={img}
             alt={nombreBonito || "Producto"}
-            style={{
-              width:"100%",
-              height:"auto",
-              display:"block",
-              background:"#0b1220"
-            }}
+            style={{ width:"100%", height:"auto", display:"block", background:"#0b1220" }}
           />
         </Link>
       ) : (
@@ -57,6 +59,7 @@ export default function ProductCard({ item }) {
         </div>
       )}
 
+      {/* Contenido */}
       <div style={{ padding: "10px" }}>
         <div style={{ fontSize:16, fontWeight:800, color:"#64c8ff" }}>{codigo}</div>
         <div style={{ marginTop:3, fontSize:12, fontWeight:600, color:"#ff9966" }}>{nombreBonito || "Sin título"}</div>
@@ -68,6 +71,7 @@ export default function ProductCard({ item }) {
           {precioFmt === "Consultar" ? "Consultar" : `₲ ${precioFmt}`}
         </div>
 
+        {/* Botones */}
         <div style={{ display:"flex", gap:6 }}>
           <a
             href={whatsapp} target="_blank" rel="noopener noreferrer"
