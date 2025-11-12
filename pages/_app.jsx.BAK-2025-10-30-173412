@@ -1,0 +1,12 @@
+import '../styles/globals.css';
+import dynamic from 'next/dynamic';
+const CompactMetaBar = dynamic(() => import('../components/CompactMetaBar'), { ssr: false });
+
+export default function App({ Component, pageProps }) {
+  return (
+    <>
+      <CompactMetaBar speed={3.8} />
+      <Component {...pageProps} />
+    </>
+  );
+}
