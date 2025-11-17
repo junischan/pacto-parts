@@ -1,0 +1,119 @@
+import { createClient } from '@supabase/supabase-js';
+import { createReadStream } from 'fs';
+import fs from 'fs';
+import path from 'path';
+import csv from 'csv-parser';
+import { config as loadEnv } from 'dotenv';
+
+// Cargar variables desde .env.local (o .env si no existe)
+loadEnv({ path: fs.existsSync('.env.local') ? '.env.local' : '.env' });
+
+// Aceptar tanto nombres “normales” como los de Next.js
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const BUCKET = process.env.SUPABASE_BUCKET || 'productos';
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Faltan variables SUPABASE_URL / SUPABASE_ANON_KEY (o NEXT_PUBLIC_*)');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Uso: node tools/subir-lote.js /ruta/a/fotos/ archivo.csv
+const [,, carpetaFotos, archivoCsv] = process.argv;
+if (!carpetaFotos || !archivoCsv) {
+  console.error('Uso: node tools/subir-lote.js <carpeta_fotos> <archivo_csv>');
+  process.exit(1);
+}
+
+// Mini normalizador de categorías (según tus reglas)
+function normalizarCategoria(raw='') {
+  const s = raw.toLowerCase();
+  if (s.includes('carroce')) return 'Carroceria';           // sin acento
+  if (s.includes('faro') || s.includes('luz')) return 'Iluminacion';
+  if (s.includes('manija')) return 'Cerraduras';
+  return raw; // fallback
+}
+
+function inferirCodigoDesdeNombre(nombre='') {
+  // 94702820.jpg -> 94702820
+  const m = nombre.match(/^([A-Za-z0-9_-]+)\.(jpg|jpeg|png|webp)$/i);
+  return m ? m[1] : '';
+}
+
+async function subirImagen(rutaLocal, destino) {
+  const stream = createReadStream(rutaLocal);
+  const { data, error } = await supabase.storage.from(BUCKET).upload(destino, stream, {
+    cacheControl: '3600',
+    upsert: true,
+    contentType: rutaLocal.endsWith('.png') ? 'image/png' : 'image/jpeg'
+  });
+  if (error) throw error;
+  const { data: publicUrl } = supabase.storage.from(BUCKET).getPublicUrl(destino);
+  return publicUrl.publicUrl;
+}
+
+async function procesar() {
+  const filas = [];
+  await new Promise((resolve, reject) => {
+    fs.createReadStream(archivoCsv)
+      .pipe(csv({ separator: ',', skipLines: 0, mapHeaders: ({header}) => header.trim() }))
+      .on('data', (row) => filas.push(row))
+      .on('end', resolve)
+      .on('error', reject);
+  });
+
+  for (const fila of filas) {
+    // Esperado: codigo, titulo, categoria, precio  (si falta, inferimos)
+    let codigo = (fila.codigo || '').toString().trim();
+    const titulo = (fila.titulo || '').toString().trim();
+    const categoria = normalizarCategoria(fila.categoria || 'Otros');
+    const precio = Number(fila.precio || 0);
+
+    // Inferir desde archivo si falta
+    if (!codigo && fila.archivo) codigo = inferirCodigoDesdeNombre(fila.archivo);
+
+    const archivoFoto = fila.archivo || `${codigo}.jpg`;
+    const rutaLocal = path.join(carpetaFotos, archivoFoto);
+
+    if (!fs.existsSync(rutaLocal)) {
+      console.log(`⚠️ Salteado: no existe ${rutaLocal}`);
+      continue;
+    }
+
+    // Subir imagen a storage
+    const keyRemoto = `${categoria.toLowerCase()}/${archivoFoto}`;
+    let imagen_url = '';
+    try {
+      imagen_url = await subirImagen(rutaLocal, keyRemoto);
+    } catch (e) {
+      console.log('❌ Error subiendo', archivoFoto, e.message);
+      continue;
+    }
+
+    // Upsert en tabla productos
+    const registro = {
+      codigo: codigo || inferirCodigoDesdeNombre(archivoFoto),
+      titulo: titulo || inferirCodigoDesdeNombre(archivoFoto),
+      categoria,
+      precio,
+      imagen_url
+    };
+
+    const { error: upErr } = await supabase
+      .from('productos')
+      .upsert(registro, { onConflict: 'codigo' });
+
+    if (upErr) {
+      console.log('❌ Error upsert', registro.codigo, upErr.message);
+    } else {
+      console.log('✅ OK', registro.codigo, '=>', imagen_url);
+    }
+  }
+}
+
+procesar().catch(e => {
+  console.error('Fallo general:', e);
+  process.exit(1);
+});

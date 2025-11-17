@@ -1,0 +1,58 @@
+"use client";
+import ProductCard from "./ProductCard";
+
+const norm = (s) =>
+  (s ?? "").toString().toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
+export default function RelatedStrip({ base, items = [] }) {
+  if (!base) return null;
+
+  const sameCat = items.filter(
+    (p) =>
+      p &&
+      norm(p.categoria) === norm(base.categoria) &&
+      String(p.codigo) !== String(base.codigo)
+  );
+
+  if (!sameCat.length) {
+    return (
+      <div style={{ opacity: 0.7, padding: 12, color: "#94a3b8" }}>
+        No hay más productos en <strong>{base.categoria || "esta categoría"}</strong>.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{ 
+        fontWeight: 700, 
+        marginBottom: 12,
+        color: "#64c8ff",
+        fontSize: 16
+      }}>
+        Más en <strong>{base.categoria}</strong>:
+      </div>
+
+      {/* Masonry grid para relacionados */}
+      <div style={{ 
+        columnCount: 2,
+        columnGap: 8,
+        columnFill: 'balance'
+      }}>
+        {sameCat.map((p) => (
+          <div 
+            key={p.codigo || p.id} 
+            style={{ 
+              breakInside: "avoid",
+              WebkitColumnBreakInside: "avoid",
+              marginBottom: 8,
+              pageBreakInside: 'avoid'
+            }}
+          >
+            <ProductCard item={p} allProducts={items} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
