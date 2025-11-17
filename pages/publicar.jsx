@@ -12,7 +12,6 @@ function toLabel(label=""){
   return clean.replace(/\b[a-z]/g, c => c.toUpperCase());
 }
 
-/* Carga/guarda categorías en localStorage */
 function loadCategories(){
   try{
     const raw = JSON.parse(localStorage.getItem("pp.categorias")||"[]");
@@ -43,59 +42,39 @@ function ensureCategory(list, anyLabel){
   return {list:next, cat:{slug,label}};
 }
 
-/* ---------- Página ---------- */
 export default function PublicarPage() {
-  // NUEVO: código y marca
   const [codigo, setCodigo] = useState("");
   const [marca, setMarca] = useState("gm");
-
   const [titulo, setTitulo] = useState("");
   const [precio, setPrecio] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [fotos, setFotos] = useState([]);
-  const [cats, setCats] = useState([]);
   const [catInput, setCatInput] = useState("");
   const [catSlug, setCatSlug] = useState("");
-
+  const [cats, setCats] = useState([]);
   const [busy, setBusy] = useState(false);
 
-  useEffect(()=>{ setCats(loadCategories()); },[]);
+  useEffect(()=>{ setCats(loadCategories()); cargarBorrador(); }, []);
 
-  // Sugerencias
   const sugerencias = useMemo(()=>{
-    const q = stripAccents(catInput).trim().toLowerCase();
-    if(!q) return cats.slice(0,8);
-    return cats.filter(c => (
-      stripAccents(c.label).toLowerCase().includes(q) ||
-      c.slug.includes(q)
-    )).slice(0,8);
-  },[catInput, cats]);
+    if(!catInput.trim()) return cats;
+    const low = stripAccents(catInput).toLowerCase();
+    return cats.filter(c=> stripAccents(c.label).toLowerCase().includes(low));
+  },[catInput,cats]);
 
-  function handlePickSuggestion(sug){
-    setCatInput(sug.label);
-    setCatSlug(sug.slug);
-  }
-
-  useEffect(()=>{
-    if(!catInput){ setCatSlug(""); return; }
-    setCatSlug(toSlug(catInput));
-  },[catInput]);
-
-  // Imágenes (máx 5 + preview)
   function handleFileChange(e) {
-    const files = Array.from(e.target.files||[]);
-    const nuevas = files.map(f => ({ file:f, name:f.name, url:URL.createObjectURL(f) }));
-    setFotos(prev => [...prev, ...nuevas].slice(0,5));
+    const arr = Array.from(e.target.files || []);
+    if(fotos.length + arr.length > 5) return alert("Máx 5 fotos");
+    const nuevas = arr.map(f=>({ file:f, name:f.name, url:URL.createObjectURL(f) }));
+    setFotos(prev=>[...prev,...nuevas]);
   }
-  function quitarFoto(idx){
-    setFotos(prev => prev.filter((_,i)=>i!==idx));
-  }
+  function quitarFoto(idx){ setFotos(prev=>prev.filter((_,i)=>i!==idx)); }
 
-  // Borrador local
   function guardarBorrador() {
-    const data = { codigo, marca, titulo, precio, descripcion, fotos:fotos.map(f=>({name:f.name,url:f.url})), categoriaSlug:catSlug, categoriaLabel:toLabel(catInput) };
-    localStorage.setItem("draft.producto", JSON.stringify(data));
-    alert("Borrador guardado ✅");
+    try{
+      const d = { codigo, marca, titulo, precio, descripcion, fotos, categoriaLabel:catInput, categoriaSlug:catSlug };
+      localStorage.setItem("draft.producto", JSON.stringify(d));
+    }catch{}
   }
   function cargarBorrador() {
     try{
@@ -111,34 +90,45 @@ export default function PublicarPage() {
     }catch{}
   }
 
-  // PUBLICAR REAL a Supabase
   async function publicar() {
     if(!codigo.trim()) return alert("Poné el código.");
-    if(!catSlug)      return alert("Elegí una categoría.");
+    if(!catInput.trim()) return alert("Elegí una categoría.");
     if(!titulo.trim())return alert("Poné el título/aclaración.");
     if(!fotos.length) return alert("Agregá al menos una foto.");
 
-    // asegurar categoría en local
     const { list, cat } = ensureCategory(cats, catInput || catSlug);
     setCats(list); setCatInput(cat.label); setCatSlug(cat.slug);
 
     setBusy(true);
     try {
-      // 1) subir fotos al bucket "productos"
+      // Subir fotos a R2 via API
       const urls = [];
       for (let i=0;i<fotos.length;i++){
         const f = fotos[i].file || null;
         if(!f) continue;
         const ext = (f.name?.split(".").pop() || "jpg").toLowerCase();
-        const key = `${marca}/${cat.slug}/${codigo}-${i+1}.${ext}`;
-        const up = await supabase.storage.from("productos")
-          .upload(key, f, { upsert:true, cacheControl:"3600", contentType:f.type || "image/jpeg" });
-        if (up.error) throw up.error;
-        const { data:pub } = supabase.storage.from("productos").getPublicUrl(key);
-        urls.push(pub.publicUrl);
+        
+        // Convertir a base64
+        const reader = new FileReader();
+        const base64 = await new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(f);
+        });
+        
+        // Llamar a la API
+        const nombreArchivo = `${codigo}-${i+1}.${ext}`;
+        const res = await fetch('/api/upload-r2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: base64, nombre: nombreArchivo })
+        });
+        
+        if (!res.ok) throw new Error('Error subiendo foto');
+        const { url } = await res.json();
+        urls.push(url);
       }
 
-      // 2) guardar/actualizar fila en tabla productos
+      // Guardar en Supabase
       const precioNum = Number(precio) || 0;
       const row = {
         codigo: String(codigo).trim(),
@@ -153,24 +143,24 @@ export default function PublicarPage() {
       if(ins.error) throw ins.error;
 
       alert("✅ Publicado correctamente");
-      // limpiar mínimamente
       setFotos([]); setPrecio(""); setDescripcion("");
     } catch (e) {
-      alert("❌ Error publicando: " + (e?.message || e));
+      alert("❌ Error: " + (e?.message || e));
     } finally {
       setBusy(false);
     }
   }
 
+  const inputStyle = {padding:10, fontSize:16, border:"1px solid #d1d5db", borderRadius:8, width:"100%"};
+  const chipStyle = {padding:"8px 16px", border:"1px solid #d1d5db", borderRadius:20, cursor:"pointer", fontSize:14};
+
   return (
     <div style={{ padding: 16, fontFamily: "system-ui" }}>
-      <h2 style={{fontSize:26, marginBottom:12}}>🧩 Publicar producto</h2>
+      <h2 style={{fontSize:26, marginBottom:12}}>🧩 Publicar producto (R2)</h2>
 
-      {/* Código */}
       <div style={{marginTop:8, fontWeight:600}}>Código:</div>
       <input value={codigo} onChange={e=>setCodigo(e.target.value)} placeholder="Ej. 52100278" style={inputStyle} />
 
-      {/* Marca */}
       <div style={{marginTop:12, fontWeight:600}}>Marca:</div>
       <div style={{display:"flex", gap:8, flexWrap:"wrap", marginTop:8}}>
         {["gm","ford","vw","otro"].map(m=>(
@@ -181,7 +171,6 @@ export default function PublicarPage() {
         ))}
       </div>
 
-      {/* Fotos */}
       <div style={{margin:"14px 0 8px", fontWeight:600}}>Fotos (máx 5):</div>
       <input type="file" multiple accept="image/*" onChange={handleFileChange}/>
       {!!fotos.length && (
@@ -195,65 +184,44 @@ export default function PublicarPage() {
         </div>
       )}
 
-      {/* Categoría con sugerencias */}
       <div style={{marginTop:16, fontWeight:600}}>Categoría:</div>
       <input
         value={catInput}
-        onChange={e=>setCatInput(e.target.value)}
-        placeholder="Ej. Faros, Frenos, Carrocería…"
+        onChange={e=>{setCatInput(e.target.value); setCatSlug("");}}
+        onBlur={()=>{ if(sugerencias.length===1) setCatSlug(sugerencias[0].slug); }}
+        placeholder="Ej. Faros, Motor, etc."
         style={inputStyle}
       />
-      <div style={{display:"flex", gap:8, flexWrap:"wrap", marginTop:8}}>
-        {sugerencias.map(s => (
-          <button key={s.slug} onClick={()=>handlePickSuggestion(s)} style={chipStyle}>
-            {s.label}
-          </button>
-        ))}
-        {catInput && !sugerencias.find(s=>s.slug===catSlug) && (
-          <button onClick={()=>handlePickSuggestion({slug:catSlug,label:toLabel(catInput)})} style={{...chipStyle, borderStyle:"dashed"}}>
-            Crear “{toLabel(catInput)}”
-          </button>
-        )}
-      </div>
-      <div style={{fontSize:12, opacity:.7, marginTop:6}}>
-        Guardaremos: <code>{marca}/{catSlug||"(cat)"}{codigo?`/${codigo}-*.jpg`:""}</code>
-      </div>
+      {catInput.trim() && sugerencias.length>0 && (
+        <div style={{marginTop:8, display:"flex", gap:8, flexWrap:"wrap"}}>
+          {sugerencias.map(s=>(
+            <button key={s.slug} onClick={()=>{setCatInput(s.label); setCatSlug(s.slug);}}
+              style={{...chipStyle, background: catSlug===s.slug?"#3b82f6":"#fff", color:catSlug===s.slug?"#fff":"#111"}}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Título / Precio / Descripción */}
-      <div style={{marginTop:16, fontWeight:600}}>Título:</div>
-      <input value={titulo} onChange={e=>setTitulo(e.target.value)} style={inputStyle} />
-      <div style={{marginTop:12, fontWeight:600}}>Precio (Gs):</div>
-      <input value={precio} onChange={e=>setPrecio(e.target.value)} inputMode="numeric" style={inputStyle} />
-      <div style={{marginTop:12, fontWeight:600}}>Descripción:</div>
-      <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} rows={4} style={{...inputStyle, height:"auto"}} />
+      <div style={{marginTop:16, fontWeight:600}}>Título/Aclaración:</div>
+      <input value={titulo} onChange={e=>setTitulo(e.target.value)} placeholder="Ej. Faro delantero LD S10 12/20" style={inputStyle} />
 
-      {/* Acciones */}
-      <div style={{display:"flex", gap:10, marginTop:16, flexWrap:"wrap"}}>
-        <button onClick={guardarBorrador} style={btnStyle}>💾 Guardar borrador</button>
-        <button onClick={cargarBorrador} style={btnStyleAlt}>📂 Cargar borrador</button>
-        <button onClick={publicar} style={btnPrimary} disabled={busy}>
-          {busy ? "Publicando..." : "Publicar"}
+      <div style={{marginTop:16, fontWeight:600}}>Precio (sin puntos):</div>
+      <input value={precio} onChange={e=>setPrecio(e.target.value)} placeholder="Ej. 150000" type="number" style={inputStyle} />
+
+      <div style={{marginTop:16, fontWeight:600}}>Descripción (opcional):</div>
+      <textarea value={descripcion} onChange={e=>setDescripcion(e.target.value)} rows={3} style={{...inputStyle, resize:"vertical"}} />
+
+      <div style={{marginTop:20, display:"flex", gap:8}}>
+        <button onClick={publicar} disabled={busy}
+          style={{flex:1, padding:14, fontSize:16, fontWeight:700, background:"#10b981", color:"#fff", border:"none", borderRadius:8, cursor: busy?"wait":"pointer"}}>
+          {busy ? "⏳ Publicando..." : "✅ Publicar"}
+        </button>
+        <button onClick={guardarBorrador}
+          style={{padding:14, fontSize:16, fontWeight:600, background:"#f3f4f6", border:"1px solid #d1d5db", borderRadius:8, cursor:"pointer"}}>
+          💾
         </button>
       </div>
     </div>
   );
 }
-
-/* ---------- estilos mínimos ---------- */
-const inputStyle = {
-  width:"100%", padding:"10px 12px", borderRadius:10,
-  border:"1px solid #d1d5db", outline:"none", background:"#f9fafb"
-};
-const chipStyle = {
-  border:"1px solid #d1d5db", padding:"6px 10px", borderRadius:9999,
-  background:"#fff", cursor:"pointer"
-};
-const btnStyle = {
-  padding:"10px 12px", borderRadius:10, border:"1px solid #d1d5db", background:"#fff"
-};
-const btnStyleAlt = {
-  padding:"10px 12px", borderRadius:10, border:"1px dashed #d1d5db", background:"#fff"
-};
-const btnPrimary = {
-  padding:"10px 14px", borderRadius:10, border:"none", background:"#10b981", color:"#fff", fontWeight:700
-};

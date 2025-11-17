@@ -3,18 +3,14 @@ import { supabase } from "../../../lib/supabase";
 import RelatedStrip from "../../../components/RelatedStrip";
 
 export default async function Producto({ params }) {
-  const { data: productos, error } = await supabase
+  // 1. Cargar SOLO el producto específico
+  const { data: productoData, error: productoError } = await supabase
     .from('productos')
-    .select('*');
+    .select('*')
+    .eq('codigo', params.codigo)
+    .single();
 
-  if (error) {
-    console.error('Error Supabase:', error);
-    return <div style={{padding:16, color:"#e6e8ee"}}>Error cargando producto</div>;
-  }
-
-  const producto = productos.find(p => String(p.codigo) === params.codigo);
-
-  if (!producto) {
+  if (productoError || !productoData) {
     return (
       <div style={{
         padding: 20,
@@ -33,10 +29,19 @@ export default async function Producto({ params }) {
     );
   }
 
-  const precioFmt = producto.precio > 0 
-    ? new Intl.NumberFormat("es-PY").format(producto.precio) 
+  const producto = productoData;
+
+  // 2. Cargar TODOS los productos relacionados por categoría (paginación en cliente)
+  const { data: relacionados } = await supabase
+    .from('productos')
+    .select('*')
+    .eq('categoria', producto.categoria)
+    .neq('codigo', producto.codigo);
+
+  const precioFmt = producto.precio > 0
+    ? new Intl.NumberFormat("es-PY").format(producto.precio)
     : "Consultar";
-    
+
   const wa = `https://wa.me/595971111111?text=${encodeURIComponent(
     `Hola! Estoy interesado en ${producto.titulo} (${producto.codigo})`
   )}`;
@@ -91,8 +96,8 @@ export default async function Producto({ params }) {
           maxHeight: "70vh"
         }}>
           {imagen ? (
-            <img 
-              src={imagen} 
+            <img
+              src={imagen}
               alt={producto.titulo}
               style={{
                 width: "100%",
@@ -200,9 +205,9 @@ export default async function Producto({ params }) {
             gap: 10,
             marginBottom: 28
           }}>
-            <a 
-              href={wa} 
-              target="_blank" 
+            <a
+              href={wa}
+              target="_blank"
               rel="noopener noreferrer"
               style={{
                 background: "linear-gradient(135deg, #25d366 0%, #1ea952 100%)",
@@ -268,17 +273,19 @@ export default async function Producto({ params }) {
           )}
 
           {/* Productos relacionados */}
-          <div style={{marginTop: 40}}>
-            <h2 style={{
-              fontSize: 20,
-              fontWeight: 800,
-              marginBottom: 16,
-              color: "#fff"
-            }}>
-              Productos relacionados
-            </h2>
-            <RelatedStrip base={producto} items={productos} />
-          </div>
+          {relacionados && relacionados.length > 0 && (
+            <div style={{marginTop: 40}}>
+              <h2 style={{
+                fontSize: 20,
+                fontWeight: 800,
+                marginBottom: 16,
+                color: "#fff"
+              }}>
+                Productos relacionados
+              </h2>
+              <RelatedStrip base={producto} items={relacionados} />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.932.0",
     "@supabase/supabase-js": "^2.76.1",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
     "formidable": "^3.5.4",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",
@@ -21,7 +24,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "eslint": "^9",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.39.0",
     "eslint-config-next": "15.5.4"
   }
 }
