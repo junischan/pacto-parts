@@ -16,12 +16,12 @@ export default function ProductGrid({ items = [], q = "", cat = "Todos" }) {
 
   return (
     <div style={{ paddingBottom: 80, paddingTop: 0 }}>
-      <div style={{ 
-        marginBottom: 8, 
-        paddingLeft: 4, 
-        color: "#94a3b8", 
-        fontWeight: 600, 
-        fontSize: 14 
+      <div style={{
+        marginBottom: 8,
+        paddingLeft: 4,
+        color: "#94a3b8",
+        fontWeight: 600,
+        fontSize: 14
       }}>
         {list.length} resultados
       </div>
@@ -40,15 +40,15 @@ export default function ProductGrid({ items = [], q = "", cat = "Todos" }) {
         }
       `}</style>
 
-      <div className="masonry-grid" style={{ 
+      <div className="masonry-grid" style={{
         columnGap: 4,
         columnFill: 'balance',
         padding: 0
       }}>
         {list.map((p, i) => (
-          <div 
-            key={p.id || p.codigo || i} 
-            style={{ 
+          <div
+            key={p.id || p.codigo || i}
+            style={{
               breakInside: "avoid",
               WebkitColumnBreakInside: "avoid",
               marginBottom: 4,

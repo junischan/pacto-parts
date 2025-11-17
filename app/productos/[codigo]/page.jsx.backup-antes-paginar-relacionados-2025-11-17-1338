@@ -31,12 +31,13 @@ export default async function Producto({ params }) {
 
   const producto = productoData;
 
-  // 2. Cargar TODOS los productos relacionados por categoría (paginación en cliente)
+  // 2. Cargar SOLO 6 productos relacionados por categoría
   const { data: relacionados } = await supabase
     .from('productos')
     .select('*')
     .eq('categoria', producto.categoria)
-    .neq('codigo', producto.codigo);
+    .neq('codigo', producto.codigo)
+    .limit(6);
 
   const precioFmt = producto.precio > 0
     ? new Intl.NumberFormat("es-PY").format(producto.precio)

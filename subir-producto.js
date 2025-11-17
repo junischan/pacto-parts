@@ -1,38 +1,25 @@
 import { supabase } from './lib/supabase.js'
+import { subirFotoR2 } from './lib/cloudflare-r2.js'
 import fs from 'fs'
 import path from 'path'
 
 async function subirProducto(fotoPath, titulo, precio, categoria = 'Otros', marca = 'Sin marca') {
   try {
-    console.log('📸 Subiendo foto...')
-    
+    console.log('📸 Subiendo foto a Cloudflare R2...')
+
     // Leer archivo
     const fotoBuffer = fs.readFileSync(fotoPath)
     const extension = path.extname(fotoPath)
     const codigo = Date.now().toString()
     const nombreArchivo = `${codigo}${extension}`
-    
-    // Subir a Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('productos')
-      .upload(`fotos/${nombreArchivo}`, fotoBuffer, {
-        contentType: `image/${extension.replace('.', '')}`,
-        upsert: false
-      })
-    
-    if (uploadError) throw uploadError
-    
-    // Obtener URL pública
-    const { data: urlData } = supabase.storage
-      .from('productos')
-      .getPublicUrl(`fotos/${nombreArchivo}`)
-    
-    const imagen_url = urlData.publicUrl
-    
-    console.log('✅ Foto subida:', imagen_url)
-    console.log('💾 Creando producto...')
-    
-    // Crear producto en BD
+
+    // Subir a Cloudflare R2 (en vez de Supabase)
+    const imagen_url = await subirFotoR2(fotoBuffer, nombreArchivo)
+
+    console.log('✅ Foto subida a R2:', imagen_url)
+    console.log('💾 Creando producto en Supabase...')
+
+    // Crear producto en BD de Supabase
     const { data: producto, error: dbError } = await supabase
       .from('productos')
       .insert({
@@ -45,32 +32,22 @@ async function subirProducto(fotoPath, titulo, precio, categoria = 'Otros', marc
       })
       .select()
       .single()
-    
+
     if (dbError) throw dbError
-    
-    console.log('🎉 ¡Producto creado exitosamente!')
-    console.log('Código:', codigo)
-    console.log('Título:', titulo)
-    console.log('Precio: ₲', new Intl.NumberFormat('es-PY').format(precio))
-    console.log('URL:', imagen_url)
-    
+
+    console.log('✅ Producto creado:', producto)
+    return producto
+
   } catch (error) {
     console.error('❌ Error:', error.message)
+    throw error
   }
 }
 
-// Leer argumentos
-const [foto, titulo, precio, categoria, marca] = process.argv.slice(2)
-
-if (!foto || !titulo || !precio) {
-  console.log(`
-📦 USO:
-  node subir-producto.js <foto> <titulo> <precio> [categoria] [marca]
-
-EJEMPLO:
-  node subir-producto.js foto.jpg "Bomba agua Ranger" 150000 "Motor" "GM"
-  `)
-  process.exit(1)
+// Si se llama directo desde terminal
+if (process.argv.length > 2) {
+  const [fotoPath, titulo, precio, categoria, marca] = process.argv.slice(2)
+  subirProducto(fotoPath, titulo, precio, categoria, marca)
 }
 
-subirProducto(foto, titulo, precio, categoria, marca)
+export { subirProducto }

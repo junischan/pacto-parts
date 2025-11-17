@@ -5,44 +5,27 @@ import SearchBar from "../components/SearchBar";
 import MagicParticles from "../components/MagicParticles";
 import BottomMenuIcons from "../components/BottomMenuIcons";
 import { supabase } from "../lib/supabase";
-import Link from "next/link";
 
 const AppReact = dynamic(() => import("../components/AppReact"), { ssr: true });
 
-export async function getServerSideProps(context) {
-  const page = parseInt(context.query.page) || 1;
-  const perPage = 10;
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
-
-  const { count } = await supabase
-    .from('productos')
-    .select('*', { count: 'exact', head: true });
-
+export async function getServerSideProps() {
   const { data, error } = await supabase
     .from('productos')
     .select('*')
-    .range(from, to)
     .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error Supabase:', error);
-    return { props: { productos: [], currentPage: 1, totalPages: 1 } };
+    return { props: { productos: [] } };
   }
 
+  // SERIALIZACIÓN FORZADA - convertir a JSON y parsear de nuevo
   const productos = JSON.parse(JSON.stringify(data || []));
-  const totalPages = Math.ceil(count / perPage);
-
-  return { 
-    props: { 
-      productos,
-      currentPage: page,
-      totalPages
-    } 
-  };
+  
+  return { props: { productos } };
 }
 
-export default function Home({ productos, currentPage, totalPages }) {
+export default function Home({ productos }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("Todos");
   const [scrollY, setScrollY] = useState(0);
@@ -105,66 +88,6 @@ export default function Home({ productos, currentPage, totalPages }) {
         </div>
       </div>
       <AppReact base={productos} q={q} cat={cat} />
-
-      {/* Paginación */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '20px',
-        padding: '40px 20px',
-        color: '#fff'
-      }}>
-        {currentPage > 1 && (
-          <Link href={`/?page=${currentPage - 1}`} style={{
-            padding: '10px 20px',
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            color: '#fff',
-            transition: 'all 0.3s'
-          }}>
-            ← Anterior
-          </Link>
-        )}
-        
-        <span style={{
-          padding: '10px 20px',
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: '8px'
-        }}>
-          Página {currentPage} de {totalPages}
-        </span>
-
-        {currentPage < totalPages && (
-          <Link href={`/?page=${currentPage + 1}`} style={{
-            padding: '10px 20px',
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            color: '#fff',
-            transition: 'all 0.3s'
-          }}>
-            Siguiente →
-          </Link>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div style={{
-        textAlign: 'center',
-        padding: '30px 20px',
-        color: 'rgba(255,255,255,0.6)',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        marginTop: '20px'
-      }}>
-        <p style={{ margin: '5px 0', fontSize: '14px' }}>
-          Creado por <strong style={{ color: '#fff' }}>Pacto</strong>
-        </p>
-        <p style={{ margin: '5px 0', fontSize: '12px' }}>
-          tahyi.dev • Powered by IA & café ☕
-        </p>
-      </div>
 
       <BottomMenuIcons onChange={handleTabChange} autoHide={true} />
 

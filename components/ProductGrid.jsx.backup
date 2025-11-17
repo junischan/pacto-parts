@@ -7,9 +7,8 @@ export default function ProductGrid({ items = [], q = "", cat = "Todos" }) {
     return (items || []).filter(p => {
       const c = p.categoria ?? p.category ?? "Otros";
       const titulo = (p.titulo ?? p.title ?? p.name ?? "").toLowerCase();
-      const codigo = (p.codigo ?? p.code ?? "").toLowerCase();
       const hitCat = cat === "Todos" ? true : c === cat;
-      const hitQ = !needle ? true : (titulo.includes(needle) || codigo.includes(needle));
+      const hitQ = !needle ? true : titulo.includes(needle);
       return hitCat && hitQ;
     });
   }, [items, q, cat]);
